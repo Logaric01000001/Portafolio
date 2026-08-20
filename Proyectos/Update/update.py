@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 
+
 class Colors:
     GREEN = "\033[32m"
     BLUE = "\033[34m"
@@ -11,31 +12,38 @@ class Colors:
     RED = "\033[31m"
     RESET = "\033[0m"
 
+
 def log(msg: str):
     print(f"\n{Colors.BLUE}[*] {msg}{Colors.RESET}")
+
 
 def success(msg: str):
     print(f"{Colors.GREEN}[✓] {msg}{Colors.RESET}")
 
+
 def warn(msg: str):
     print(f"{Colors.YELLOW}[!] {msg}{Colors.RESET}")
+
 
 def run_command(cmd: list[str], check: bool = True) -> subprocess.CompletedProcess:
     """Ejecuta un comando interactivo redirigiendo stdout/stderr."""
     return subprocess.run(cmd, check=check)
 
+
 def update_mirrors():
     if shutil.which("reflector"):
-        log("Actualizando mirrors más rápidos con Reflector...")
+        log("Actualizando y optimizando la lista de mirrors con Reflector...")
+        # Selecciona los 5 mirrors más rápidos ordenados por tasa de transferencia
         run_command([
             "sudo", "reflector",
-            "--latest", "10",
+            "--latest", "5",
             "--sort", "rate",
             "--save", "/etc/pacman.d/mirrorlist",
         ])
-        success("Mirrors actualizados.")
+        success("Mirrors actualizados y optimizados correctamente.")
     else:
         warn("Reflector no encontrado. Saltando optimización de mirrors.")
+
 
 def update_packages():
     log("Actualizando paquetes oficiales y AUR...")
@@ -46,6 +54,7 @@ def update_packages():
     else:
         run_command(["sudo", "pacman", "-Syu"])
     success("Paquetes actualizados.")
+
 
 def remove_orphans():
     log("Buscando paquetes huérfanos...")
@@ -62,6 +71,7 @@ def remove_orphans():
     else:
         success("No se encontraron paquetes huérfanos.")
 
+
 def clean_cache():
     log("Limpiando caché de paquetes...")
     if shutil.which("paccache"):
@@ -71,6 +81,7 @@ def clean_cache():
     else:
         warn("paccache no disponible. Limpiando con pacman -Sc...")
         run_command(["sudo", "pacman", "-Sc", "--noconfirm"])
+
 
 def check_kernel_reboot():
     try:
@@ -90,6 +101,7 @@ def check_kernel_reboot():
     except subprocess.CalledProcessError:
         pass
 
+
 def main():
     try:
         update_mirrors()
@@ -104,6 +116,7 @@ def main():
     except KeyboardInterrupt:
         print(f"\n{Colors.YELLOW}[!] Operación cancelada por el usuario.{Colors.RESET}")
         sys.exit(130)
+
 
 if __name__ == "__main__":
     main()
